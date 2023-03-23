@@ -214,25 +214,32 @@ if nav == "Collect Data":
         
 
         if text and start_date and end_date and form1_result:
- #--------------------------------------------Scrapping------------------------------------------            
-            generated_tweets, text, limit, end_date, start_date = scrapping(text,likes,end_date,start_date,limit)
+ #--------------------------------------------Scrapping------------------------------------------
+            
+            try: 
+                date_validation(start_date,end_date) 
 
-            st.write("No Progress?? Change the date range")
+                generated_tweets, text, limit, end_date, start_date = scrapping(text,likes,end_date,
+                                                                                start_date,limit)
 
-            df,scrapped_data = create_dataframe(generated_tweets)
-            #db section
-            database(text,limit,start_date,end_date)
+                st.write("No Progress?? Change the date range")
 
-            time.sleep(1.2)
-            st.write("Sample Tweets")
-            st.write(df.head())
-            st.write("__Total Scrapped Data:__",scrapped_data)
-#--------------------------------------------Download------------------------------------------ 
-            if download_option == 'CSV':
-                
-                st.markdown(download_csv(df), unsafe_allow_html=True)
-            elif download_option == 'JSON':
-                st.markdown(download_json(df), unsafe_allow_html=True)
+                df,scrapped_data = create_dataframe(generated_tweets)
+                #db section
+                database(text,limit,start_date,end_date)
+
+                time.sleep(1.2)
+                st.write("Sample Tweets")
+                st.write(df.head())
+                st.write("__Total Scrapped Data:__",scrapped_data)
+    #--------------------------------------------Download------------------------------------------ 
+                if download_option == 'CSV':
+                    
+                    st.markdown(download_csv(df), unsafe_allow_html=True)
+                elif download_option == 'JSON':
+                    st.markdown(download_json(df), unsafe_allow_html=True)
+            except:
+                st.error("__Refresh the page__",icon="ℹ️")
 
         elif form1_result and  start_date and end_date :
                 #Date Validation
