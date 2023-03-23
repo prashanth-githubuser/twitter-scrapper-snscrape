@@ -165,7 +165,7 @@ if nav == "Home Page":
                      "likes":["3524","7534","4985","6590","8970"]
                     }
 
-    sample_df = pd.DataFrame(sample_tweets, index = [1,2,3,4,5,6])
+    sample_df = pd.DataFrame(sample_tweets, index = [1,2,3,4,5])
     st.write(sample_df)
     
     st.write("Use side bar for Collecting the data from twitter")
