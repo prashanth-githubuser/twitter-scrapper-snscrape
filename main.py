@@ -90,7 +90,7 @@ def create_dataframe(tweets):
 def update_keyword(text,limit,start_date,end_date):
     time_stamp = datetime.today().strftime("%Y-%m-%d")
     delta = end_date-start_date
-    client = pymongo.MongoClient(st.secrets[auth_key])
+    client = pymongo.MongoClient(st.secrets["auth_key"])
     db = client.twitter_scrapped_data
     collection_name = str(time_stamp)
     collection = db[collection_name]
