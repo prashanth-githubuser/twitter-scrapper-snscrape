@@ -14,10 +14,9 @@ def date_validation(start_date,end_date ):
     try:
         start_date= datetime.strptime(start_date,'%Y-%m-%d')
         end_date  = datetime.strptime(end_date ,'%Y-%m-%d')
+        return start_date, end_date
     except :
         st.error("Please enter valid date format")
-
-
 
 
 @st.cache_data
@@ -76,7 +75,7 @@ def scrapping(text:str,likes:str,end_date:str,start_date:str,limit):
             
             break
 
-    return tweets, text, limit
+    return tweets, text, limit,end_date,start_date
 
 @st.cache_data
 def create_dataframe(tweets):
@@ -87,25 +86,29 @@ def create_dataframe(tweets):
 
     return df, scrapped_data
 
-def database(tweet,limit,df):
+#---------------------------------------(Database)----------------------------------
+def update_keyword(text,limit,start_date,end_date):
+    time_stamp = datetime.today().strftime("%Y-%m-%d")
+    delta = end_date-start_date
+    client = pymongo.MongoClient("mongodb+srv://user_0:root0000@cluster99.j3n8dnp.mongodb.net/?retryWrites=true&w=majority")
+    db = client.twitter_scrapped_data
+    collection_name = str(time_stamp)
+    collection = db[collection_name]
+    doc = {"Scraped Word": text,
+        "Scraped Date":time_stamp,
+        "Scraped Data": [f"{limit} Scraped data from past {delta.days} days"]}
+    collection.update_one(doc,{"$set": doc},upsert=True)
+
+
+def database(text,limit,start_date,end_date):
     try:
-        client = pymongo.MongoClient("mongodb+srv://user_0:root0000@cluster99.j3n8dnp.mongodb.net/?retryWrites=true&w=majority")
-        db = client.twitter_scrapped_data
-        time_stamp = datetime.today().strftime("%Y-%m-%d")
-        collection_name = str(tweet+" "+str(limit)+" "+"tweets"+" "+time_stamp)
-        collection_list = db.list_collection_names()
-        
-        if collection_name in collection_list:
-            pass
-
-        elif collection_name not in collection_list:
-            collection = db[collection_name]
-            #df.reset_index(inplace=True)
-            collection.insert_many(df.to_dict("records"))
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+        update_keyword(text,limit,start_date,end_date)
     except:
-        st.error("Service Error")
+        update_keyword(text,limit,start_date,end_date)
     
-
+#---------------------------------------(download)----------------------------------
 @st.cache_data
 def download_csv(data):
 
@@ -122,7 +125,7 @@ def download_json(data):
     href_json = f'<a href="data:file/json;base64,{b64}" download="{file_name}">➥Click Here to download in JSON format!!</a>'
     return href_json
 
-
+#======================================(Web Page)-----------------------------------
 st.set_page_config(page_title = "Twitter Scrapper", layout = "wide")
 
 #Header
@@ -162,7 +165,7 @@ if nav == "Home Page":
                      "likes":["3524","7534","4985","6590","8970"]
                     }
 
-    sample_df = pd.DataFrame(sample_tweets, index = [1,3,4,5,6])
+    sample_df = pd.DataFrame(sample_tweets, index = [1,2,3,4,5,6])
     st.write(sample_df)
     
     st.write("Use side bar for Collecting the data from twitter")
@@ -208,16 +211,17 @@ if nav == "Collect Data":
             
         download_option = st.selectbox("Select Format",["Select Format","CSV","JSON"])    
         form1_result = st.form_submit_button("Start Scrapping tweets")
+        
 
         if text and start_date and end_date and form1_result:
-            
-            generated_tweets, text, limit= scrapping(text,likes,end_date,start_date,limit)
+ #--------------------------------------------Scrapping------------------------------------------            
+            generated_tweets, text, limit, end_date, start_date = scrapping(text,likes,end_date,start_date,limit)
 
             st.write("No Progress?? Change the date range")
 
             df,scrapped_data = create_dataframe(generated_tweets)
             #db section
-            database(text,limit,df)
+            database(text,limit,start_date,end_date)
 
             time.sleep(1.2)
             st.write("Sample Tweets")
